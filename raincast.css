@@ -1,0 +1,13 @@
+.MMM-Buienalarm .rainWrapper {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+}
+
+
+.MMM-Buienalarm .highcharts-plot-line-label img {
+    filter: invert(100%);
+    position: relative;
+    bottom: 16px;
+}
