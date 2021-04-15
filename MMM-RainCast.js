@@ -13,6 +13,7 @@ Module.register("MMM-RainCast",{
         height: 500,
         iconHeight: 40,
         apiKey: '',
+        useDWD: false,
         forecastHours: 4,
         forecastSteps: 15,
         updateInterval: 5 * 60 * 1000,
@@ -33,8 +34,8 @@ Module.register("MMM-RainCast",{
   // Override start method.
     start: function() {
         console.log("Starting module: " + this.name);
-        this.sendSocketNotification("RAIN_REQUEST", this.config);
         if (![1,5,15,30].includes(this.config.forecastSteps)) { this.config.forecastSteps = 5; }
+        this.sendSocketNotification("RAIN_REQUEST", this.config);
     },
 
   // Define required scripts. Highcharts needed for the graph.
@@ -67,14 +68,13 @@ Module.register("MMM-RainCast",{
             this.updateDom();
         } else if (notification == "RAIN_DATA") {
             this.log(payload);
-            if (payload.data) { this.processData(payload); }
+            if (payload.length) { this.processData(payload) }
         }
     },
 
 
     processData: function(payload) {
         var endOfForecast = moment().add(this.config.forecastHours, "hours").format("x");
-        var apiData = payload.data.timelines[0].intervals;
         var rainData = {
             times: [],
             rain: [],
@@ -97,32 +97,60 @@ Module.register("MMM-RainCast",{
         var i = 0;
         var rainStarted = false;
         var rainEnded = false;
-        for (let i = 0; i < apiData.length; i++) {
-            var time = parseInt(moment(apiData[i].startTime).format("x"));
-            if (time < endOfForecast) {
-                var values = apiData[i].values;
-                rainData.times.push(time);
-                rainData.rain.push([time, values.precipitationIntensity]);
-                rainData.completeRain += values.precipitationIntensity;
-                rainData.cloudCover.push([time, values.cloudCover]);
-                rainData.pressure.push([time, values.pressureSurfaceLevel]);
-                rainData.visibility.push([time, values.visibility]);
-                rainData.windSpeed.push([time, values.windSpeed, values.windGust]);
-                rainData.windGust.push([time, values.windGust]);
-                rainData.windDirection.push([time, values.windDirection]);
-                rainData.rainProb.push([time, values.precipitationProbability]);
-                rainData.temp.push([time, values.temperature]);
-                rainData.appTemp.push([time, values.temperatureApparent]);
-                rainData.maxRain = Math.max(rainData.maxRain, values.precipitationIntensity);
-                if (!rainStarted && values.precipitationIntensity > 0 && !rainEnded) {
-                    rainStarted = true;
-                    rainData.startRain = time
-                } else if (rainStarted && values.precipitationIntensity == 0) {
-                    rainStarted = false;
-                    rainEnded = true;
-                    rainData.endRain = time;
+        if (payload.data) {
+            var apiData = payload.data.timelines[0].intervals;           
+            for (let i = 0; i < apiData.length; i++) {
+                var time = parseInt(moment(apiData[i].startTime).format("x"));
+                if (time < endOfForecast) {
+                    var values = apiData[i].values;
+                    var segmentRain = values.precipitationIntensity;
+                    rainData.times.push(time);
+                    rainData.rain.push([time, segmentRain]);
+                    rainData.completeRain += segmentRain;
+                    rainData.cloudCover.push([time, values.cloudCover]);
+                    rainData.pressure.push([time, values.pressureSurfaceLevel]);
+                    rainData.visibility.push([time, values.visibility]);
+                    rainData.windSpeed.push([time, values.windSpeed, values.windGust]);
+                    rainData.windGust.push([time, values.windGust]);
+                    rainData.windDirection.push([time, values.windDirection]);
+                    rainData.rainProb.push([time, values.precipitationProbability]);
+                    rainData.temp.push([time, values.temperature]);
+                    rainData.appTemp.push([time, values.temperatureApparent]);
+                    rainData.maxRain = Math.max(rainData.maxRain, segmentRain);
+                    if (!rainStarted && segmentRain > 0 && !rainEnded) {
+                        rainStarted = true;
+                        rainData.startRain = time
+                    } else if (rainStarted && segmentRain == 0) {
+                        rainStarted = false;
+                        rainEnded = true;
+                        rainData.endRain = time;
+                    }
                 }
-            }
+            }      
+        } else {
+            var apiData = payload;           
+            for (let i = 0; i < apiData.length; i++) {
+                var time = apiData[i].timestamp * 1000; 
+                if (time < endOfForecast) {
+                    var dbz = Math.max(0, parseInt(apiData[i].dbz));
+                    var z = Math.pow(10,(dbz/10));
+                    var segmentRain = Math.pow(z/256, (1/1.42));
+                    if (segmentRain < 0.1) segmentRain = 0;
+                    this.log(segmentRain);                
+                    rainData.times.push(time);
+                    rainData.rain.push([time, segmentRain]);
+                    rainData.completeRain += segmentRain;
+                    rainData.maxRain = Math.max(rainData.maxRain, segmentRain);
+                    if (!rainStarted && segmentRain > 0 && !rainEnded) {
+                        rainStarted = true;
+                        rainData.startRain = time
+                    } else if (rainStarted && segmentRain == 0 && !rainEnded) {
+                        //rainStarted = false;
+                        rainEnded = true;
+                        rainData.endRain = time;
+                    }
+                }
+            }            
         }
         this.log(rainData);
 
@@ -251,7 +279,6 @@ Module.register("MMM-RainCast",{
                 }
             },
             time: {
-                //timezoneOffset: moment().utcOffset(),
                 useUTC: false,
             },
             title: {

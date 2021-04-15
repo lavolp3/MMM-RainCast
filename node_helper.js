@@ -32,13 +32,17 @@ module.exports = NodeHelper.create({
 
     getData: function() {
         var self = this;
-        var url = 'https://data.climacell.co/v4/timelines?location=';
-        url += this.config.lat + ',' + this.config.lon;
-        url += '&fields=precipitationIntensity,precipitationType,pressureSurfaceLevel,humidity,temperature,temperatureApparent,'
-        + 'cloudCover,precipitationProbability,visibility,weatherCode,windDirection,windSpeed,windGust'
-        + '&timesteps=' + this.config.forecastSteps + 'm'
-        + '&apikey=' + this.config.apiKey;
-        console.log(url);
+        if (this.config.useDWD) {
+            var url = 'https://morgenwirdes.de/api/v2/rjson.php?lat=' + this.config.lat + '&long=' + this.config.lon;
+        } else {
+            var url = 'https://data.climacell.co/v4/timelines?location=';
+            url += this.config.lat + ',' + this.config.lon;
+            url += '&fields=precipitationIntensity,precipitationType,pressureSurfaceLevel,humidity,temperature,temperatureApparent,'
+            + 'cloudCover,precipitationProbability,visibility,weatherCode,windDirection,windSpeed,windGust'
+            + '&timesteps=' + this.config.forecastSteps + 'm'
+            + '&apikey=' + this.config.apiKey; 
+        }
+        this.log(url);
         request(url, function (error, response, body) {
             if (error) throw new Error(error);
             self.log(body);
@@ -46,16 +50,6 @@ module.exports = NodeHelper.create({
             self.sendSocketNotification('RAIN_DATA', self.rainData);
         });
     },
-    
-    /*processData: function(payload) {
-        var rainData = payload;
-        for (let i = 0; i < rainData.data.timelines[0].intervals.length; i++) {
-            if (rainData.data.timelines[0].intervals[i].precipitationProbability === 0) {
-                rainData.data.timelines[0].intervals[i].precipitationIntensity = 0
-            }
-        }
-        return rainData;
-    },*/
 
     log: function (msg) {
         if (this.config && this.config.debug) {
