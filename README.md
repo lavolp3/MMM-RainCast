@@ -4,6 +4,9 @@ A <a href="https://github.com/MichMich/MagicMirror">MagicMirror</a> module using
 
 ## Updates
 
+1.0.1 2021-04-15
+- included DWD weather serice for german destinations (climacell is far too inaccurate)
+
 1.0.0 2021-03-08
 - stable version published.
 
@@ -18,7 +21,8 @@ A <a href="https://github.com/MichMich/MagicMirror">MagicMirror</a> module using
 
 |Option|Description|
 |---|---|
-|`apiKey`|ClimaCell API Key.<br>Get it [here](https://www.climacell.co/weather-api/)|
+|`apiKey`|ClimaCell API Key.<br>Only needed outside of Germany<br>Get it [here](https://www.climacell.co/weather-api/)|
+|`useDWD`|Option to use DWD weather service. Only provides 2 hour rain forecast.<b>No API key needed!</b>|
 |`lat`|The latitude of your position.<br>**Type:** `Float`<br>**Default:** `52.15`|
 |`lon`|The longitude of your position.<br>**Type:** `Float`<br>**Default:** `5.55`|
 |`width`|Width of the graph<br>**Type:** `Integer`<br>**Default:** `500`|
@@ -52,10 +56,30 @@ Here is an example of an entry in `config.js`
 },
 ```
 
+Alternative version in Germany:
+```
+{
+    module: "MMM-RainCast",
+    position: "top_right",   // see mirror setting for options
+    header: "RainCast",
+    config: {
+        useDWD: true,
+        lat: 52.222,
+        lon: 5.555,
+        width: 500,
+        forecastHours: 4,
+        forecastSteps: 15,
+        height: 400,
+        hideWithNoRain: true,
+        chartType: "line",  //use "line" or "bar"
+    }
+},
+```
+
 ## Screenshot
 ![Screenshot](/rainImage.PNG?raw=true "Predicted rain")
 
 
 ## Notes
-Data provided by <a href="https://www.climacell.co/">climacell</a>.
+Data provided by <a href="https://www.climacell.co/">climacell</a> and <a href="https://morgenwirdes.de/api/">https://morgenwirdes.de</a>
 
