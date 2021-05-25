@@ -40,7 +40,7 @@ module.exports = NodeHelper.create({
             url += '&fields=precipitationIntensity,precipitationType,pressureSurfaceLevel,humidity,temperature,temperatureApparent,'
             + 'cloudCover,precipitationProbability,visibility,weatherCode,windDirection,windSpeed,windGust'
             + '&timesteps=' + this.config.forecastSteps + 'm'
-            + '&apikey=' + this.config.apiKey; 
+            + '&apikey=' + this.config.apiKey;
         }
         this.log(url);
         request(url, function (error, response, body) {

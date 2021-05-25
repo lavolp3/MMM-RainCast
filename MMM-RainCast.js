@@ -60,7 +60,7 @@ Module.register("MMM-RainCast",{
     },
 
     socketNotificationReceived: function(notification, payload) {
-        this.log("Socket Notification received: "+notification);
+        this.log("Socket Notification received: " + notification);
 
         // was not able to receive data
         if (notification == "ERROR") {
@@ -68,7 +68,7 @@ Module.register("MMM-RainCast",{
             this.updateDom();
         } else if (notification == "RAIN_DATA") {
             this.log(payload);
-            if (payload.length) { this.processData(payload) }
+            this.processData(payload);
         }
     },
 
@@ -136,7 +136,6 @@ Module.register("MMM-RainCast",{
                     var z = Math.pow(10,(dbz/10));
                     var segmentRain = Math.pow(z/256, (1/1.42));
                     if (segmentRain < 0.1) segmentRain = 0;
-                    this.log(segmentRain);                
                     rainData.times.push(time);
                     rainData.rain.push([time, segmentRain]);
                     rainData.completeRain += segmentRain;
@@ -294,11 +293,12 @@ Module.register("MMM-RainCast",{
             },
             xAxis: {
                 type: 'datetime',
-                tickInterval: 1000 * 60 * 60,
+                tickInterval: 1000 * 60 * 30,
                 labels: {
                     overflow: 'justify',
                     style: {
-                        fontSize: '1em'
+                        fontSize: '1em',
+                        fontColor: '#eee'
                     }
                 },
                 gridLineColor: '#aaaaaa',
