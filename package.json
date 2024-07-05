@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/lavolp3/MMM-Buienalarm#readme",
   "dependencies": {
-    "highcharts": "^8.2.2"
+    "highcharts": "^8.2.2",
+    "request": "^2.88.2"
   }
 }
